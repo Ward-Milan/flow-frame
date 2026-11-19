@@ -1,0 +1,24 @@
+# Dependencies & Build Outputs
+node_modules/
+dist/
+dist-ssr/
+*.local
+*.log
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Tauri & Rust Build Artifacts
+src-tauri/target/
+
+# Android Build & Generated Binaries
+src-tauri/gen/android/.gradle/
+src-tauri/gen/android/build/
+src-tauri/gen/android/app/build/
+src-tauri/gen/android/local.properties
+src-tauri/gen/android/app/src/main/jniLibs/
+
+# Release Signing Secrets & Packaged Installers (published in GitHub Releases)
+src-tauri/flowframe-release.keystore
+releases-v1.0.0/

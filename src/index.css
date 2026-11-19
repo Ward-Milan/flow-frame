@@ -1,0 +1,795 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ════════════════════════════════════════════════════════════════════════════
+   CUSTOM SCROLLBAR — macOS-style thin scrollbar for Windows/Linux
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Chromium / WebKit (Chrome, Edge, Electron, Tauri WebView) */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.28);
+}
+
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+/* Firefox fallback */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   RESPONSIVE UI SCALING SYSTEM
+   Adapts interface elements (not canvas) based on screen size
+   ════════════════════════════════════════════════════════════════════════════ */
+
+:root {
+    /* Base scale factor - modified by media queries */
+    --ui-scale: 1;
+    
+    /* Derived spacing values */
+    --ui-spacing-xs: calc(4px * var(--ui-scale));
+    --ui-spacing-sm: calc(8px * var(--ui-scale));
+    --ui-spacing-md: calc(12px * var(--ui-scale));
+    --ui-spacing-lg: calc(16px * var(--ui-scale));
+    --ui-spacing-xl: calc(24px * var(--ui-scale));
+    
+    /* Derived font sizes */
+    --ui-text-xs: calc(10px * var(--ui-scale));
+    --ui-text-sm: calc(12px * var(--ui-scale));
+    --ui-text-base: calc(14px * var(--ui-scale));
+    --ui-text-lg: calc(16px * var(--ui-scale));
+    --ui-text-xl: calc(18px * var(--ui-scale));
+    
+    /* UI element sizes */
+    --ui-topbar-height: calc(56px * var(--ui-scale));
+    --ui-sidebar-width: calc(280px * var(--ui-scale));
+    --ui-sidebar-width-sm: calc(220px * var(--ui-scale));
+    --ui-panel-width: calc(300px * var(--ui-scale));
+    --ui-button-height: calc(36px * var(--ui-scale));
+    --ui-button-height-sm: calc(32px * var(--ui-scale));
+    --ui-icon-size: calc(18px * var(--ui-scale));
+    --ui-icon-size-sm: calc(16px * var(--ui-scale));
+}
+
+/* Ultra High Definition / 4K monitors (2560px+) */
+@media (min-width: 2560px) {
+    :root {
+        --ui-scale: 1.35;
+    }
+}
+
+/* 2K / WQHD monitors (1920px - 2559px) */
+@media (min-width: 1920px) and (max-width: 2559px) {
+    :root {
+        --ui-scale: 1.15;
+    }
+}
+
+/* Standard desktop screens (1440px - 1919px) */
+@media (min-width: 1440px) and (max-width: 1919px) {
+    :root {
+        --ui-scale: 1;
+    }
+}
+
+/* Medium screens (1280px - 1439px) */
+@media (max-width: 1439px) {
+    :root {
+        --ui-scale: 0.92;
+    }
+}
+
+/* Small screens / HD monitors (1024px - 1279px) */
+@media (max-width: 1279px) {
+    :root {
+        --ui-scale: 0.85;
+    }
+}
+
+/* Tablets and small laptops (768px - 1023px) */
+@media (max-width: 1023px) {
+    :root {
+        --ui-scale: 0.78;
+    }
+}
+
+/* Mobile screens / Vertical portrait phones (480px - 767px) */
+@media (max-width: 767px) {
+    :root {
+        --ui-scale: 0.72;
+    }
+}
+
+/* Very small mobile screens (below 480px) */
+@media (max-width: 479px) {
+    :root {
+        --ui-scale: 0.65;
+    }
+}
+
+/* Mobile landscape orientation (horizontal phones with short screen height) */
+@media (max-height: 520px) and (orientation: landscape) {
+    :root {
+        --ui-scale: 0.70;
+        --ui-topbar-height: calc(42px * var(--ui-scale));
+    }
+}
+
+@layer base {
+
+    :root,
+    :root.dark,
+    [data-theme="dark"],
+    .theme-frame {
+        /* Pro Studio Dark Theme with Vibrant Emerald Accent (#10B981) */
+        --bg-app: #121212;
+        --bg-panel: #18181b;
+        --bg-secondary-panel: #202024;
+        --bg-active: #27272a;
+        --bg-element: #27272a;
+
+        /* Text */
+        --text-primary: #FFFFFF;
+        --text-secondary: #a1a1aa;
+        --text-muted: #71717a;
+
+        /* Borders */
+        --border-color: rgba(255, 255, 255, 0.08);
+        --border-subtle: rgba(255, 255, 255, 0.04);
+
+        /* Canvas (Drawing Studio) */
+        --bg-canvas: #121212;
+        --grid-color: rgba(255, 255, 255, 0.05);
+
+        /* Accent & Brand (Vibrant Emerald #10B981) */
+        --color-brand: #10B981;
+        --accent: #10B981;
+        --color-accent-strong: #34D399;
+
+        /* Functional Colors */
+        --color-success: #10B981;
+        --color-destructive: #EF4444;
+
+        --launcher-bg: #121212;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       LIGHT THEME
+       Note: Le canvas du module Light reste sombre pour la visibilité des flux
+       ══════════════════════════════════════════════════════════════════════ */
+    :root.light,
+    [data-theme="light"] {
+        /* Backgrounds */
+        --bg-gradient-start: #f1f5f9;
+        --bg-gradient-mid: #e2e8f0;
+        --bg-gradient-end: #cbd5e1;
+        --bg-app: #f1f5f9;
+        --launcher-bg: linear-gradient(90deg, var(--bg-gradient-start) 0%, var(--bg-gradient-mid) 50%, var(--bg-gradient-end) 100%);
+
+        --bg-panel: #ffffff;
+        --bg-panel-overlay: #ffffff;
+        --bg-secondary-panel: #f8fafc;
+
+        /* Text */
+        --text-primary: #0f172a;
+        --text-secondary: #334155;
+        --text-muted: #64748b;
+
+        /* Borders */
+        --border-color: #cbd5e1;
+
+        /* Canvas (Drawing Area) - light theme uses a soft light-gray for visibility */
+        --bg-canvas: #e2e8f0;
+        --grid-color: rgba(0, 0, 0, 0.1);
+
+        /* Brand Identity */
+        --color-brand: #ea580c;
+        --color-accent-strong: #c2410c;
+
+        /* Functional Colors */
+        --color-success: #059669;
+        --color-destructive: #dc2626;
+
+        --accent: var(--color-brand);
+        --bg-element: #f1f5f9;
+    }
+
+    html,
+    body,
+    #root {
+        height: 100%;
+        width: 100%;
+        background: #121212;
+        color: var(--text-primary);
+        font-family: 'Inter', system-ui, sans-serif;
+        /* Clean dashboard font */
+    }
+
+    /* Topbar specific styling to match site look */
+    header {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.06));
+        backdrop-filter: blur(6px);
+    }
+
+    /* Card / Panel appearance close to site */
+    .card-panel {
+        background: var(--bg-panel-overlay);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        box-shadow: 0 6px 30px rgba(2, 6, 11, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+        overflow: hidden;
+    }
+
+    /* Primary button look for Enregistrer */
+    .btn-primary-site {
+        background: var(--color-brand);
+        color: white;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+    }
+    .btn-primary-site:hover {
+        /* Remove upward gradient and translate for a flatter global highlight */
+        transform: none;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.45), 0 0 0 6px rgba(0,0,0,0.03);
+        background: var(--color-brand);
+        border: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .btn-outline-site {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        color: var(--text-secondary);
+        padding: 8px 12px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .btn-outline-site:hover {
+        background: rgba(124,58,237,0.06);
+        color: #ddd;
+        border-color: rgba(124,58,237,0.24);
+        transform: translateY(-1px);
+    }
+
+    /* Small transient toast used by global save actions */
+    .ff-toast {
+        position: fixed;
+        right: 20px;
+        top: 20px;
+        background: rgba(20,20,20,0.9);
+        color: #fff;
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+        z-index: 9999;
+        opacity: 0;
+        transform: translateY(-6px);
+        transition: opacity 180ms ease, transform 180ms ease;
+    }
+    .ff-toast.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* logo round removed per user request (use plain logo) */
+
+    /* --- Custom Sliders (input[type="range"]) --- */
+    input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        background: transparent;
+        cursor: pointer;
+        width: 100%;
+        height: 20px;
+    }
+
+    /* Track (the rail) - Matches Canva Bg #484848 */
+    input[type="range"]::-webkit-slider-runnable-track {
+        background: var(--bg-canvas);
+        height: 6px;
+        border-radius: 3px;
+        border: 1px solid #333333;
+    }
+
+    input[type="range"]::-moz-range-track {
+        background: var(--bg-canvas);
+        height: 6px;
+        border-radius: 3px;
+        border: 1px solid #333333;
+    }
+
+    /* Thumb (the button) - Brand Color #ff8c00 */
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        margin-top: -7px;
+        /* (Track height/2) - (Thumb height/2) */
+        background-color: var(--color-brand);
+        height: 18px;
+        width: 18px;
+        border-radius: 50%;
+        border: 2px solid #1E1E1E;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+        transition: transform 0.1s ease, background-color 0.2s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+        transform: scale(1.15);
+        background-color: var(--color-accent-strong);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+        background-color: var(--color-brand);
+        height: 18px;
+        width: 18px;
+        border-radius: 50%;
+        border: 2px solid #1E1E1E;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    }
+}
+
+/* --- Module Glow Utilities --- */
+.glow-indigo {
+    box-shadow: 0 0 20px rgba(79, 70, 229, 0.4) !important;
+    border-color: rgba(99, 102, 241, 0.4) !important;
+}
+
+.glow-emerald {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.4) !important;
+    border-color: rgba(16, 185, 129, 0.4) !important;
+}
+
+.glow-orange {
+    box-shadow: 0 0 20px rgba(255, 140, 0, 0.4) !important;
+    border-color: rgba(255, 140, 0, 0.4) !important;
+}
+
+/* --- FlowFrame Emerald Theme Overrides --- */
+.theme-frame {
+    --accent: #10B981;
+    --color-brand: #10B981;
+    --color-accent-strong: #34D399;
+}
+
+/* Slider thumb color follows emerald accent */
+.theme-frame input[type="range"]::-webkit-slider-thumb {
+    background-color: #10B981;
+}
+.theme-frame input[type="range"]::-webkit-slider-thumb:hover {
+    background-color: #34D399;
+}
+.theme-frame input[type="range"]::-moz-range-thumb {
+    background-color: #10B981;
+}
+
+.theme-prod input[type="range"]::-webkit-slider-thumb {
+    background-color: #6366f1;
+}
+.theme-prod input[type="range"]::-webkit-slider-thumb:hover {
+    background-color: #818cf8;
+}
+.theme-prod input[type="range"]::-moz-range-thumb {
+    background-color: #6366f1;
+}
+
+.theme-vault input[type="range"]::-webkit-slider-thumb {
+    background-color: #3B82F6;
+}
+.theme-vault input[type="range"]::-webkit-slider-thumb:hover {
+    background-color: #60A5FA;
+}
+.theme-vault input[type="range"]::-moz-range-thumb {
+    background-color: #3B82F6;
+}
+
+/* ─── ANIMATIONS ───────────────────────────────────────────────────────────── */
+
+@keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes scale-in {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slide-in-right {
+    from { opacity: 0; transform: translateX(100%); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slide-in-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+    animation: fade-in 0.2s ease-out forwards;
+}
+
+.animate-scale-in {
+    animation: scale-in 0.2s ease-out forwards;
+}
+
+.animate-slide-in-right {
+    animation: slide-in-right 0.3s ease-out forwards;
+}
+
+.animate-slide-in-up {
+    animation: slide-in-up 0.3s ease-out forwards;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   RESPONSIVE UI UTILITY CLASSES
+   Apply these to elements that should scale with screen size
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Scaled text sizes */
+.ui-text-xs { font-size: var(--ui-text-xs) !important; }
+.ui-text-sm { font-size: var(--ui-text-sm) !important; }
+.ui-text-base { font-size: var(--ui-text-base) !important; }
+.ui-text-lg { font-size: var(--ui-text-lg) !important; }
+.ui-text-xl { font-size: var(--ui-text-xl) !important; }
+
+/* Scaled spacing */
+.ui-p-xs { padding: var(--ui-spacing-xs) !important; }
+.ui-p-sm { padding: var(--ui-spacing-sm) !important; }
+.ui-p-md { padding: var(--ui-spacing-md) !important; }
+.ui-p-lg { padding: var(--ui-spacing-lg) !important; }
+.ui-p-xl { padding: var(--ui-spacing-xl) !important; }
+
+.ui-px-sm { padding-left: var(--ui-spacing-sm) !important; padding-right: var(--ui-spacing-sm) !important; }
+.ui-px-md { padding-left: var(--ui-spacing-md) !important; padding-right: var(--ui-spacing-md) !important; }
+.ui-px-lg { padding-left: var(--ui-spacing-lg) !important; padding-right: var(--ui-spacing-lg) !important; }
+
+.ui-py-sm { padding-top: var(--ui-spacing-sm) !important; padding-bottom: var(--ui-spacing-sm) !important; }
+.ui-py-md { padding-top: var(--ui-spacing-md) !important; padding-bottom: var(--ui-spacing-md) !important; }
+
+.ui-gap-xs { gap: var(--ui-spacing-xs) !important; }
+.ui-gap-sm { gap: var(--ui-spacing-sm) !important; }
+.ui-gap-md { gap: var(--ui-spacing-md) !important; }
+.ui-gap-lg { gap: var(--ui-spacing-lg) !important; }
+
+/* Scaled element dimensions */
+.ui-topbar { height: var(--ui-topbar-height) !important; }
+.ui-sidebar { width: var(--ui-sidebar-width) !important; }
+.ui-sidebar-sm { width: var(--ui-sidebar-width-sm) !important; }
+.ui-panel { width: var(--ui-panel-width) !important; }
+
+/* Responsive sidebar collapse for small screens */
+@media (max-width: 1279px) {
+    .ui-sidebar-collapse {
+        width: calc(200px * var(--ui-scale)) !important;
+    }
+    .ui-panel-collapse {
+        width: calc(260px * var(--ui-scale)) !important;
+    }
+}
+
+@media (max-width: 1023px) {
+    .ui-sidebar-collapse {
+        width: calc(180px * var(--ui-scale)) !important;
+    }
+    .ui-panel-collapse {
+        width: calc(220px * var(--ui-scale)) !important;
+    }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   GLOBAL RESPONSIVE APPLICATION
+   Applied to text, buttons, labels across all modules
+   DOES NOT affect layout structure (widths, flex containers, canvas)
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Global TopBar responsive */
+header.shrink-0 {
+    height: var(--ui-topbar-height);
+    padding-left: var(--ui-spacing-lg);
+    padding-right: var(--ui-spacing-lg);
+}
+
+header.shrink-0 button {
+    font-size: var(--ui-text-sm);
+}
+
+/* Module switcher responsive */
+header .flex.items-center.gap-4 {
+    gap: var(--ui-spacing-md);
+}
+
+/* Text scaling for all modules */
+.theme-light, .theme-prod, .theme-frame, .theme-vault {
+    font-size: var(--ui-text-base);
+}
+
+/* ═══ TEXT SIZE SCALING (all modules) ═══ */
+/* These affect only text size, not layout */
+
+.theme-light .text-\[10px\], 
+.theme-light .text-\[11px\],
+.theme-prod .text-\[10px\], 
+.theme-prod .text-\[11px\],
+.theme-frame .text-\[10px\], 
+.theme-frame .text-\[11px\],
+.theme-vault .text-\[10px\], 
+.theme-vault .text-\[11px\] {
+    font-size: var(--ui-text-xs) !important;
+}
+
+.theme-light .text-xs,
+.theme-prod .text-xs,
+.theme-frame .text-xs,
+.theme-vault .text-xs {
+    font-size: var(--ui-text-xs) !important;
+}
+
+.theme-light .text-sm,
+.theme-prod .text-sm,
+.theme-frame .text-sm,
+.theme-vault .text-sm {
+    font-size: var(--ui-text-sm) !important;
+}
+
+/* ═══ LAYOUT SCALING (ALL MODULES INCLUDING Light) ═══ */
+/* Panel and sidebar widths */
+
+@media (max-width: 1279px) {
+    /* Left sidebars */
+    .theme-light .w-\[280px\], 
+    .theme-light .w-\[300px\],
+    .theme-prod .w-\[280px\], 
+    .theme-prod .w-\[300px\],
+    .theme-frame .w-\[280px\], 
+    .theme-frame .w-\[300px\],
+    .theme-vault .w-\[280px\], 
+    .theme-vault .w-\[300px\] {
+        width: calc(220px * var(--ui-scale)) !important;
+    }
+    
+    /* Right panels (inspector, properties) */
+    .theme-light .w-\[320px\], 
+    .theme-light .w-\[350px\], 
+    .theme-light .w-\[360px\],
+    .theme-prod .w-\[320px\], 
+    .theme-prod .w-\[350px\], 
+    .theme-prod .w-\[360px\],
+    .theme-frame .w-\[320px\], 
+    .theme-frame .w-\[350px\], 
+    .theme-frame .w-\[360px\],
+    .theme-vault .w-\[320px\], 
+    .theme-vault .w-\[350px\], 
+    .theme-vault .w-\[360px\] {
+        width: calc(260px * var(--ui-scale)) !important;
+    }
+    
+    /* Smaller sidebars */
+    .theme-light .w-\[200px\], 
+    .theme-light .w-\[220px\],
+    .theme-prod .w-\[200px\], 
+    .theme-prod .w-\[220px\],
+    .theme-frame .w-\[200px\], 
+    .theme-frame .w-\[220px\],
+    .theme-vault .w-\[200px\], 
+    .theme-vault .w-\[220px\] {
+        width: calc(160px * var(--ui-scale)) !important;
+    }
+    
+    /* Light module specific: md:w-[300px] and md:w-[350px] in responsive classes */
+    .theme-light .md\:w-\[300px\] {
+        width: calc(220px * var(--ui-scale)) !important;
+    }
+    .theme-light .md\:w-\[350px\] {
+        width: calc(260px * var(--ui-scale)) !important;
+    }
+}
+
+@media (max-width: 1023px) {
+    .theme-light .w-\[280px\], 
+    .theme-light .w-\[300px\],
+    .theme-prod .w-\[280px\], 
+    .theme-prod .w-\[300px\],
+    .theme-frame .w-\[280px\], 
+    .theme-frame .w-\[300px\],
+    .theme-vault .w-\[280px\], 
+    .theme-vault .w-\[300px\] {
+        width: calc(180px * var(--ui-scale)) !important;
+    }
+    
+    .theme-light .w-\[320px\], 
+    .theme-light .w-\[350px\], 
+    .theme-light .w-\[360px\],
+    .theme-prod .w-\[320px\], 
+    .theme-prod .w-\[350px\], 
+    .theme-prod .w-\[360px\],
+    .theme-frame .w-\[320px\], 
+    .theme-frame .w-\[350px\], 
+    .theme-frame .w-\[360px\],
+    .theme-vault .w-\[320px\], 
+    .theme-vault .w-\[350px\], 
+    .theme-vault .w-\[360px\] {
+        width: calc(220px * var(--ui-scale)) !important;
+    }
+    
+    .theme-light .w-\[200px\], 
+    .theme-light .w-\[220px\],
+    .theme-prod .w-\[200px\], 
+    .theme-prod .w-\[220px\],
+    .theme-frame .w-\[200px\], 
+    .theme-frame .w-\[220px\],
+    .theme-vault .w-\[200px\], 
+    .theme-vault .w-\[220px\] {
+        width: calc(140px * var(--ui-scale)) !important;
+    }
+    
+    /* Light module specific */
+    .theme-light .md\:w-\[300px\] {
+        width: calc(180px * var(--ui-scale)) !important;
+    }
+    .theme-light .md\:w-\[350px\] {
+        width: calc(220px * var(--ui-scale)) !important;
+    }
+}
+
+/* ═══ SPACING SCALING (ALL MODULES) ═══ */
+/* Reduce padding/gap on smaller screens */
+
+@media (max-width: 1279px) {
+    .theme-light .p-4, 
+    .theme-light .p-5, 
+    .theme-light .p-6,
+    .theme-prod .p-4, 
+    .theme-prod .p-5, 
+    .theme-prod .p-6,
+    .theme-frame .p-4, 
+    .theme-frame .p-5, 
+    .theme-frame .p-6,
+    .theme-vault .p-4, 
+    .theme-vault .p-5, 
+    .theme-vault .p-6 {
+        padding: var(--ui-spacing-md) !important;
+    }
+    
+    .theme-light .px-4, 
+    .theme-light .px-5, 
+    .theme-light .px-6,
+    .theme-prod .px-4, 
+    .theme-prod .px-5, 
+    .theme-prod .px-6,
+    .theme-frame .px-4, 
+    .theme-frame .px-5, 
+    .theme-frame .px-6,
+    .theme-vault .px-4, 
+    .theme-vault .px-5, 
+    .theme-vault .px-6 {
+        padding-left: var(--ui-spacing-md) !important;
+        padding-right: var(--ui-spacing-md) !important;
+    }
+    
+    .theme-light .py-2, 
+    .theme-light .py-3,
+    .theme-prod .py-2, 
+    .theme-prod .py-3,
+    .theme-frame .py-2, 
+    .theme-frame .py-3,
+    .theme-vault .py-2, 
+    .theme-vault .py-3 {
+        padding-top: var(--ui-spacing-sm) !important;
+        padding-bottom: var(--ui-spacing-sm) !important;
+    }
+    
+    .theme-light .gap-4, 
+    .theme-light .gap-6,
+    .theme-prod .gap-4, 
+    .theme-prod .gap-6,
+    .theme-frame .gap-4, 
+    .theme-frame .gap-6,
+    .theme-vault .gap-4, 
+    .theme-vault .gap-6 {
+        gap: var(--ui-spacing-md) !important;
+    }
+    
+    .theme-light .gap-2, 
+    .theme-light .gap-3,
+    .theme-prod .gap-2, 
+    .theme-prod .gap-3,
+    .theme-frame .gap-2, 
+    .theme-frame .gap-3,
+    .theme-vault .gap-2, 
+    .theme-vault .gap-3 {
+        gap: var(--ui-spacing-sm) !important;
+    }
+}
+
+/* TopBar height responsive override */
+@media (max-width: 1279px) {
+    .h-14, .h-\[56px\] {
+        height: var(--ui-topbar-height) !important;
+    }
+}
+
+/* Button size reductions - All modules */
+@media (max-width: 1279px) {
+    .theme-light .px-4.py-2, 
+    .theme-light .px-5.py-2, 
+    .theme-light .px-6.py-2,
+    .theme-prod .px-4.py-2, 
+    .theme-prod .px-5.py-2, 
+    .theme-prod .px-6.py-2,
+    .theme-frame .px-4.py-2, 
+    .theme-frame .px-5.py-2, 
+    .theme-frame .px-6.py-2,
+    .theme-vault .px-4.py-2, 
+    .theme-vault .px-5.py-2, 
+    .theme-vault .px-6.py-2 {
+        padding: var(--ui-spacing-sm) var(--ui-spacing-md) !important;
+    }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   MOBILE & TABLET RESPONSIVE OVERRIDES (Android Portrait & Landscape)
+   Ensures UI elements fit perfectly on narrow mobile screens and small resolutions
+   ════════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 767px) {
+    /* Auto-shrink sidebars and inspector panels on phone resolutions */
+    .theme-light .w-\[280px\], 
+    .theme-light .w-\[300px\],
+    .theme-light .w-\[320px\], 
+    .theme-light .w-\[350px\],
+    .theme-frame .w-\[280px\], 
+    .theme-frame .w-\[300px\],
+    .theme-frame .w-\[320px\], 
+    .theme-frame .w-\[350px\] {
+        width: calc(180px * var(--ui-scale)) !important;
+    }
+
+    /* Modals auto-adaptation for mobile screens */
+    div[role="dialog"], .fixed.inset-0 > div {
+        max-width: 95vw !important;
+        max-height: 92vh !important;
+    }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   DOCK DRAG & DROP ANIMATION (Rotating / Marching Ants Dashed Border)
+   ════════════════════════════════════════════════════════════════════════════ */
+
+@keyframes marchingAnts {
+    0% {
+        stroke-dashoffset: 0;
+    }
+    100% {
+        stroke-dashoffset: -32;
+    }
+}
+
+.animate-marching-ants {
+    animation: marchingAnts 0.9s linear infinite;
+}
+
