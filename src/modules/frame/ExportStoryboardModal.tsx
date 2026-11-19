@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Download, Film, Loader2, Video, FileText, Clapperboard, Music } from 'lucide-react';
+import { X, Download, Film, Loader2, Video, FileText, Clapperboard, Music, Scissors, Image as ImageIcon, LayoutGrid } from 'lucide-react';
 import type { StoryboardCard } from './types';
 import { useStoryboardStore } from '../../store/useStoryboardStore';
 import { useToast } from '../../shared';
@@ -805,42 +805,63 @@ export function ExportStoryboardModal({ isOpen, onClose, projectName, cards }: P
                         <div className="p-6 space-y-5 overflow-y-auto max-h-[55vh]">
                             {/* Info Box */}
                             {exportMode === 'xml' ? (
-                                <div className="bg-[var(--bg-element)]/50 border border-[var(--border-color)] rounded-xl p-4 space-y-1.5 text-xs text-[var(--text-secondary)]">
+                                <div className="bg-[var(--bg-element)]/50 border border-[var(--border-color)] rounded-xl p-4 space-y-2 text-xs text-[var(--text-secondary)]">
                                     <p className="font-bold text-[var(--text-primary)] mb-1">
                                         Pack Montage XML avec coupes & plans indépendants :
                                     </p>
-                                    <p>
-                                        ✂️ <strong>Fichiers Timeline XML & FCPXML</strong> avec toutes les coupes et durées exactes plan par plan.
+                                    <p className="flex items-start gap-2">
+                                        <Scissors size={14} className="shrink-0 mt-0.5 text-[var(--accent)]" />
+                                        <span>
+                                            <strong>Fichiers Timeline XML & FCPXML</strong> avec toutes les coupes et durées exactes plan par plan.
+                                        </span>
                                     </p>
-                                    <p>
-                                        🖼️ <strong>Dossier /plans/</strong> contenant chaque plan et pose en image haute définition indépendante (Calque Décor + Pose fusionnés).
+                                    <p className="flex items-start gap-2">
+                                        <ImageIcon size={14} className="shrink-0 mt-0.5 text-[var(--accent)]" />
+                                        <span>
+                                            <strong>Dossier /plans/</strong> contenant chaque plan et pose en image haute définition indépendante (Calque Décor + Pose fusionnés).
+                                        </span>
                                     </p>
-                                    <p>
-                                        🎵 <strong>Dossier /audio/</strong> incluant automatiquement la piste son MP3 synchronisée sur la timeline.
+                                    <p className="flex items-start gap-2">
+                                        <Music size={14} className="shrink-0 mt-0.5 text-[var(--accent)]" />
+                                        <span>
+                                            <strong>Dossier /audio/</strong> incluant automatiquement la piste son MP3 synchronisée sur la timeline.
+                                        </span>
                                     </p>
                                 </div>
                             ) : exportMode === 'zip' ? (
-                                <div className="bg-[var(--bg-element)]/50 border border-[var(--border-color)] rounded-xl p-4 space-y-1.5 text-xs text-[var(--text-secondary)]">
+                                <div className="bg-[var(--bg-element)]/50 border border-[var(--border-color)] rounded-xl p-4 space-y-2 text-xs text-[var(--text-secondary)]">
                                     <p className="font-bold text-[var(--text-primary)] mb-1">
                                         Contenu du Pack Vidéo MP4 :
                                     </p>
-                                    <p>
-                                        🎥 Vidéo animatique <strong>animatique.mp4</strong> au framerate et à la résolution choisis.
+                                    <p className="flex items-start gap-2">
+                                        <Video size={14} className="shrink-0 mt-0.5 text-[var(--accent)]" />
+                                        <span>
+                                            Vidéo animatique <strong>animatique.mp4</strong> au framerate et à la résolution choisis.
+                                        </span>
                                     </p>
-                                    <p>
-                                        🖼️ <strong>Dossier /plans/</strong> avec toutes les images individuelles numérotées + piste son MP3.
+                                    <p className="flex items-start gap-2">
+                                        <ImageIcon size={14} className="shrink-0 mt-0.5 text-[var(--accent)]" />
+                                        <span>
+                                            <strong>Dossier /plans/</strong> avec toutes les images individuelles numérotées + piste son MP3.
+                                        </span>
                                     </p>
                                 </div>
                             ) : (
-                                <div className="bg-[var(--bg-element)]/50 border border-[var(--border-color)] rounded-xl p-4 space-y-1.5 text-xs text-[var(--text-secondary)]">
+                                <div className="bg-[var(--bg-element)]/50 border border-[var(--border-color)] rounded-xl p-4 space-y-2 text-xs text-[var(--text-secondary)]">
                                     <p className="font-bold text-[var(--text-primary)] mb-1">
                                         Fiche PDF de tournage :
                                     </p>
-                                    <p>
-                                        📋 Tableau ordonné contenant les planches sous format de vignettes.
+                                    <p className="flex items-start gap-2">
+                                        <LayoutGrid size={14} className="shrink-0 mt-0.5 text-[var(--accent)]" />
+                                        <span>
+                                            Tableau ordonné contenant les planches sous format de vignettes.
+                                        </span>
                                     </p>
-                                    <p>
-                                        📝 Informations associées : Séquence, plan, durée, valeurs de cadrage, mouvements caméra et notes.
+                                    <p className="flex items-start gap-2">
+                                        <FileText size={14} className="shrink-0 mt-0.5 text-[var(--accent)]" />
+                                        <span>
+                                            Informations associées : Séquence, plan, durée, valeurs de cadrage, mouvements caméra et notes.
+                                        </span>
                                     </p>
                                 </div>
                             )}
