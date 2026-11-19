@@ -1,0 +1,37 @@
+<svg viewBox="0 0 1024 1024" width="1024" height="1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Exact FlowFrame Studio App Background (#14161B -> #0F1115) -->
+    <linearGradient id="ff-app-bg" x1="0" y1="0" x2="0" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#14161B" />
+      <stop offset="100%" stop-color="#0F1115" />
+    </linearGradient>
+
+    <!-- Studio Emerald Flow Gradient -->
+    <linearGradient id="ff-flow-green" x1="166" y1="562" x2="824" y2="466" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#34D399" />
+      <stop offset="50%" stop-color="#2DD498" />
+      <stop offset="100%" stop-color="#10B981" />
+    </linearGradient>
+  </defs>
+
+  <!-- Full-Bleed Dark App Background -->
+  <rect width="1024" height="1024" fill="url(#ff-app-bg)" />
+
+  <!-- Centered Emerald Tilted S-Curve + 3 Keyframe Nodes (No White Brackets) -->
+  <g transform="translate(512 512) scale(0.92) translate(-494 -515)">
+    <path
+      d="M 166 562
+         C 295 405, 545 292, 602 340
+         C 644 375, 550 458, 492 516
+         C 434 574, 344 655, 386 690
+         C 443 738, 695 622, 822 466"
+      stroke="url(#ff-flow-green)"
+      stroke-width="62"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <circle cx="166" cy="562" r="46" fill="#34D399" />
+    <circle cx="492" cy="516" r="50" fill="#2DD498" />
+    <circle cx="822" cy="466" r="42" fill="#10B981" />
+  </g>
+</svg>

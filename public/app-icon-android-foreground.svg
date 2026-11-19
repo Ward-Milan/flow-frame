@@ -1,0 +1,28 @@
+<svg viewBox="0 0 1024 1024" width="1024" height="1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Studio Emerald Flow Gradient -->
+    <linearGradient id="ff-flow-green" x1="166" y1="562" x2="824" y2="466" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#34D399" />
+      <stop offset="50%" stop-color="#2DD498" />
+      <stop offset="100%" stop-color="#10B981" />
+    </linearGradient>
+  </defs>
+
+  <!-- Android Adaptive Icon Foreground (108dp canvas, scaled to 66dp safe zone) -->
+  <g transform="translate(512 512) scale(0.72) translate(-494 -515)">
+    <path
+      d="M 166 562
+         C 295 405, 545 292, 602 340
+         C 644 375, 550 458, 492 516
+         C 434 574, 344 655, 386 690
+         C 443 738, 695 622, 822 466"
+      stroke="url(#ff-flow-green)"
+      stroke-width="64"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <circle cx="166" cy="562" r="48" fill="#34D399" />
+    <circle cx="492" cy="516" r="52" fill="#2DD498" />
+    <circle cx="822" cy="466" r="44" fill="#10B981" />
+  </g>
+</svg>
