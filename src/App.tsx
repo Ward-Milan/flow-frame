@@ -18,10 +18,16 @@ export function App() {
     const isPlaying = useStoryboardStore(s => s.isPlaying);
     const setIsPlaying = useStoryboardStore(s => s.setIsPlaying);
 
-    // Optional URL parameter (?demoView=gallery|draw|animatic) to open the demo project directly
+    // Seed built-in Sunset Demo project by default on first launch (and support ?demoView URL param)
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const demoView = params.get('demoView');
+        const alreadySeeded = localStorage.getItem('flowframe_demo_seeded_v1') === '1';
+        const state = useStoryboardStore.getState();
+        const hasDemoInLibrary = state.savedProjects.some(
+            p => p.title && p.title.toLowerCase().includes('crépuscule')
+        );
+
         if (demoView === 'gallery' || demoView === 'draw' || demoView === 'animatic') {
             fetch('/demo/crepuscule-horizon-demo.json')
                 .then(res => (res.ok ? res.text() : ''))
@@ -29,6 +35,7 @@ export function App() {
                     if (!text) return;
                     const loaded = useStoryboardStore.getState().importProjectJson(text);
                     if (!loaded) return;
+                    localStorage.setItem('flowframe_demo_seeded_v1', '1');
                     useStoryboardStore.getState().setIsLauncherOpen(false);
                     if (demoView === 'draw') {
                         const cards = useStoryboardStore.getState().project.cards;
@@ -40,6 +47,20 @@ export function App() {
                     useStoryboardStore.getState().setViewMode(demoView);
                 })
                 .catch(err => console.warn('Failed to load demo project from URL', err));
+        } else if (!alreadySeeded && !hasDemoInLibrary) {
+            fetch('/demo/crepuscule-horizon-demo.json')
+                .then(res => (res.ok ? res.text() : ''))
+                .then(text => {
+                    if (!text) return;
+                    const wasLauncherOpen = useStoryboardStore.getState().isLauncherOpen;
+                    const loaded = useStoryboardStore.getState().importProjectJson(text);
+                    if (loaded) {
+                        localStorage.setItem('flowframe_demo_seeded_v1', '1');
+                        // Keep the launcher open on startup so user sees the preloaded Sunset Demo ready to open
+                        useStoryboardStore.getState().setIsLauncherOpen(wasLauncherOpen);
+                    }
+                })
+                .catch(err => console.warn('Failed to seed default demo project', err));
         }
     }, []);
 
