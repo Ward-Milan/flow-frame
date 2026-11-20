@@ -58,20 +58,18 @@ Un storyboard de démonstration en **4 plans 16:9** intitulé **« Crépuscule s
 
 ---
 
-## Téléchargement & Installation (`v1.0.0`)
+## Téléchargement & Installation (`v1.0.1`)
 
-Rendez-vous sur la page **[Releases v1.0.0](../../releases/tag/v1.0.0)** :
+Rendez-vous sur la page **[Releases v1.0.1](../../releases/tag/v1.0.1)** :
 
-### macOS (`FlowFrameStudio-v1.0.0-macOS.dmg`)
-1. Ouvrez `FlowFrameStudio-v1.0.0-macOS.dmg` et glissez **Flow Frame Studio.app** dans `/Applications`.
-2. Au premier lancement, si macOS affiche un avertissement Gatekeeper (application non notarisée Apple), ouvrez le Terminal et exécutez :
+### macOS (`FlowFrameStudio-v1.0.1-macOS.dmg`)
+1. Ouvrez `FlowFrameStudio-v1.0.1-macOS.dmg` et glissez **Flow Frame Studio.app** dans `/Applications`.
+2. **Premier lancement (sécurité macOS / Gatekeeper)** : L'application étant open-source et gratuite (sans abonnement payant Apple Developer), macOS peut bloquer sa première ouverture. Pour l'autoriser en 2 secondes :
+   - Essayez d'ouvrir l'application une première fois, puis allez dans **Réglages Système › Confidentialité et sécurité**, descendez tout en bas et cliquez sur **« Ouvrir quand même »**.
+   - *(En cas de blocage persistant sur macOS Sequoia+, vous pouvez aussi lancer dans le Terminal : `xattr -cr "/Applications/Flow Frame Studio.app"`).*
 
-```bash
-sudo xattr -rd com.apple.quarantine "/Applications/Flow Frame Studio.app"
-```
-
-### Android Tablette (`FlowFrameStudio-v1.0.0-android.apk`)
-1. Téléchargez **`FlowFrameStudio-v1.0.0-android.apk`** sur votre tablette Android et lancez l'installation (APK ARM64 aligné et signé).
+### Android Tablette (`FlowFrameStudio-v1.0.1-android.apk`)
+1. Téléchargez **`FlowFrameStudio-v1.0.1-android.apk`** sur votre tablette Android et lancez l'installation (APK ARM64 aligné et signé).
 2. **Mises à jour automatiques GitHub** : l'application vérifie automatiquement les nouvelles releases via **Menu Projet → Mises à jour GitHub** sur `Ward-Milan/flow-frame` *(note : les mises à jour automatiques via l'API publique GitHub s'activeront automatiquement dès que ce dépôt passera de Privé à Public)*.
 
 ---
