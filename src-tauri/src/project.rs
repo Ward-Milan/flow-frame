@@ -25,3 +25,15 @@ pub fn read_project_file(path: String) -> Result<String, String> {
         .map_err(|e| format!("Impossible de lire le fichier de projet : {}", e))
 }
 
+/// Writes binary bytes (.flow ZIP, PDF, PNG) directly to user-chosen destination path
+#[tauri::command]
+pub fn write_binary_file(path: String, data: Vec<u8>) -> Result<(), String> {
+    if let Some(parent) = Path::new(&path).parent() {
+        if !parent.as_os_str().is_empty() {
+            let _ = fs::create_dir_all(parent);
+        }
+    }
+    fs::write(&path, &data)
+        .map_err(|e| format!("Impossible d'enregistrer le fichier : {}", e))
+}
+

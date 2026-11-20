@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { X, Download, Film, Loader2, Video, FileText, Clapperboard, Music, Scissors, Image as ImageIcon, LayoutGrid } from 'lucide-react';
+import { X, Download, Film, Loader2, Video, FileText, Clapperboard, Music, Scissors, Image as ImageIcon, LayoutGrid, Package, CheckCircle2 } from 'lucide-react';
 import type { StoryboardCard } from './types';
 import { useStoryboardStore } from '../../store/useStoryboardStore';
 import { useToast } from '../../shared';
 import JSZip from 'jszip';
 import { StoryboardPDFExporter } from './services/StoryboardPDFExporter';
+import { exportFlowFramePackageBlob } from '../../core/FlowPackageService';
 
 interface Props {
     isOpen: boolean;
@@ -13,7 +14,7 @@ interface Props {
     cards: StoryboardCard[];
 }
 
-type ExportMode = 'xml' | 'zip' | 'pdf';
+type ExportMode = 'flow' | 'xml' | 'zip' | 'pdf';
 
 interface TimelineClipStep {
     clipId: string;
@@ -486,32 +487,44 @@ export function ExportStoryboardModal({ isOpen, onClose, projectName, cards }: P
     };
 
     const saveZipOrFile = async (blob: Blob, defaultFilename: string, ext: string, label: string) => {
-        try {
+        const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
+        if (isTauri) {
             const { save } = await import('@tauri-apps/plugin-dialog');
-            const { writeFile } = await import('@tauri-apps/plugin-fs');
+            const { invoke } = await import('@tauri-apps/api/core');
 
             const path = await save({
                 defaultPath: defaultFilename,
                 filters: [{ name: label, extensions: [ext] }]
             });
 
-            if (path) {
-                const buffer = await blob.arrayBuffer();
-                await writeFile(path, new Uint8Array(buffer));
-                toast.success(`${label} enregistré : ${path}`);
-            }
-        } catch (tauriErr) {
-            console.warn('Tauri dialog fallback to browser download', tauriErr);
-            triggerBrowserDownload(blob, defaultFilename);
-            toast.success(`${label} téléchargé : ${defaultFilename}`);
+            if (!path) return;
+            const finalPath = path.toLowerCase().endsWith(`.${ext.toLowerCase()}`)
+                ? path
+                : `${path}.${ext}`;
+            const buffer = await blob.arrayBuffer();
+            await invoke('write_binary_file', {
+                path: finalPath,
+                data: Array.from(new Uint8Array(buffer))
+            });
+            toast.success(`${label} enregistré`);
+            return;
         }
+
+        triggerBrowserDownload(blob, defaultFilename);
+        toast.success(`${label} téléchargé : ${defaultFilename}`);
     };
 
     const handleExport = async () => {
         setIsExporting(true);
         setProgress(0);
         try {
-            if (exportMode === 'pdf') {
+            if (exportMode === 'flow') {
+                // --- 0. UNIVERSAL FLOW SUITE PACKAGE (.flow ZIP) ---
+                const currentProject = useStoryboardStore.getState().project;
+                const flowBlob = await exportFlowFramePackageBlob(currentProject);
+                const filename = `${(projectTitle || currentProject.title || 'projet').replace(/[^a-zA-Z0-9-_]/g, '_')}.flow`;
+                await saveZipOrFile(flowBlob, filename, 'flow', 'Projet Flow Suite (.flow)');
+            } else if (exportMode === 'pdf') {
                 // --- 1. PDF EXPORT (Storyboard Contact Sheet) ---
                 const credits: string[] = [];
                 if (director) credits.push(`Réal: ${director}`);
@@ -741,19 +754,21 @@ export function ExportStoryboardModal({ isOpen, onClose, projectName, cards }: P
                         )}
                         <div className="w-full text-center">
                             <div className="text-sm font-black mb-1.5">
-                                {exportMode === 'pdf'
+                                {exportMode === 'flow'
+                                    ? 'Création du projet Flow Suite (.flow)...'
+                                    : exportMode === 'pdf'
                                     ? 'Génération de la planche PDF...'
                                     : exportMode === 'xml'
                                     ? 'Génération du Pack Montage XML + Plans Indépendants...'
                                     : 'Génération du Pack Vidéo MP4 + Plans...'}
                             </div>
-                            {exportMode !== 'pdf' && (
+                            {exportMode !== 'pdf' && exportMode !== 'flow' && (
                                 <div className="text-xs text-[var(--text-secondary)] font-mono">
                                     {progress}% complété
                                 </div>
                             )}
                         </div>
-                        {exportMode !== 'pdf' && (
+                        {exportMode !== 'pdf' && exportMode !== 'flow' && (
                             <div className="w-full bg-[var(--bg-element)] rounded-full h-2 overflow-hidden border border-[var(--border-color)]">
                                 <div
                                     className="bg-[var(--accent)] h-full transition-all duration-150"
@@ -765,46 +780,75 @@ export function ExportStoryboardModal({ isOpen, onClose, projectName, cards }: P
                 ) : (
                     /* Configuration Panel */
                     <>
-                        {/* 3 Mode Tabs (XML Pack, Video MP4 Pack, PDF Sheet) */}
-                        <div className="flex border-b border-[var(--border-color)] p-1 bg-[var(--bg-element)]/30">
+                        {/* 4 Mode Tabs (Flow Suite .flow, PDF Sheet, XML Pack, Video MP4 Pack) */}
+                        <div className="grid grid-cols-4 border-b border-[var(--border-color)] p-1 bg-[var(--bg-element)]/30 gap-1">
                             <button
-                                onClick={() => setExportMode('xml')}
-                                className={`flex-1 flex items-center justify-center gap-2 py-3 text-xs font-bold transition-all border-b-2 rounded-t-lg ${
-                                    exportMode === 'xml'
+                                onClick={() => setExportMode('flow')}
+                                className={`flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold transition-all border-b-2 rounded-t-lg ${
+                                    exportMode === 'flow'
                                         ? 'border-[var(--accent)] text-[var(--text-primary)] bg-[var(--bg-panel)]'
                                         : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                                 }`}
                             >
-                                <Clapperboard size={14} />
-                                Pack Montage XML (.zip)
-                            </button>
-                            <button
-                                onClick={() => setExportMode('zip')}
-                                className={`flex-1 flex items-center justify-center gap-2 py-3 text-xs font-bold transition-all border-b-2 rounded-t-lg ${
-                                    exportMode === 'zip'
-                                        ? 'border-[var(--accent)] text-[var(--text-primary)] bg-[var(--bg-panel)]'
-                                        : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-                                }`}
-                            >
-                                <Video size={14} />
-                                Vidéo MP4 + Plans (.zip)
+                                <Package size={14} />
+                                Projet .flow
                             </button>
                             <button
                                 onClick={() => setExportMode('pdf')}
-                                className={`flex-1 flex items-center justify-center gap-2 py-3 text-xs font-bold transition-all border-b-2 rounded-t-lg ${
+                                className={`flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold transition-all border-b-2 rounded-t-lg ${
                                     exportMode === 'pdf'
                                         ? 'border-[var(--accent)] text-[var(--text-primary)] bg-[var(--bg-panel)]'
                                         : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                                 }`}
                             >
                                 <FileText size={14} />
-                                Planche PDF (.pdf)
+                                Planche PDF
+                            </button>
+                            <button
+                                onClick={() => setExportMode('xml')}
+                                className={`flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold transition-all border-b-2 rounded-t-lg ${
+                                    exportMode === 'xml'
+                                        ? 'border-[var(--accent)] text-[var(--text-primary)] bg-[var(--bg-panel)]'
+                                        : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                                }`}
+                            >
+                                <Clapperboard size={14} />
+                                Montage XML
+                            </button>
+                            <button
+                                onClick={() => setExportMode('zip')}
+                                className={`flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold transition-all border-b-2 rounded-t-lg ${
+                                    exportMode === 'zip'
+                                        ? 'border-[var(--accent)] text-[var(--text-primary)] bg-[var(--bg-panel)]'
+                                        : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                                }`}
+                            >
+                                <Video size={14} />
+                                Vidéo MP4
                             </button>
                         </div>
 
                         <div className="p-6 space-y-5 overflow-y-auto max-h-[55vh]">
                             {/* Info Box */}
-                            {exportMode === 'xml' ? (
+                            {exportMode === 'flow' ? (
+                                <div className="bg-[var(--bg-element)]/50 border border-[var(--border-color)] rounded-xl p-4 space-y-2 text-xs text-[var(--text-secondary)]">
+                                    <p className="font-bold text-[var(--text-primary)] mb-1">
+                                        Conteneur Universel Flow Suite (.flow) :
+                                    </p>
+                                    <p className="flex items-start gap-2">
+                                        <CheckCircle2 size={14} className="shrink-0 mt-0.5 text-[var(--accent)]" />
+                                        <span>
+                                            Archive portable contenant tout ton storyboard, les vignettes PNG et les données de séquences/plans.
+                                        </span>
+                                    </p>
+                                    <p className="flex items-start gap-2">
+                                        <CheckCircle2 size={14} className="shrink-0 mt-0.5 text-[var(--accent)]" />
+                                        <span>
+                                            S&apos;ouvre directement dans <strong>FlowLight</strong> (et les futurs <strong>FlowTrack</strong> &amp; <strong>FlowPatch</strong>) en préservant les plans de feu liés.
+                                        </span>
+                                    </p>
+                                </div>
+                            ) : exportMode === 'xml' ? (
                                 <div className="bg-[var(--bg-element)]/50 border border-[var(--border-color)] rounded-xl p-4 space-y-2 text-xs text-[var(--text-secondary)]">
                                     <p className="font-bold text-[var(--text-primary)] mb-1">
                                         Pack Montage XML avec coupes & plans indépendants :
@@ -867,7 +911,7 @@ export function ExportStoryboardModal({ isOpen, onClose, projectName, cards }: P
                             )}
 
                             {/* Audio Track Status & Standalone MP3 Export */}
-                            {exportMode !== 'pdf' && (
+                            {exportMode !== 'pdf' && exportMode !== 'flow' && (
                                 <div className="flex items-center justify-between bg-[var(--bg-element)]/40 border border-[var(--border-color)] rounded-xl px-4 py-2.5">
                                     <div className="flex items-center gap-2.5">
                                         <Music
@@ -901,7 +945,7 @@ export function ExportStoryboardModal({ isOpen, onClose, projectName, cards }: P
                             )}
 
                             {/* Options fields */}
-                            {exportMode !== 'pdf' ? (
+                            {exportMode === 'flow' ? null : exportMode !== 'pdf' ? (
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1.5">
                                         <label className="text-xs uppercase tracking-widest text-[var(--text-secondary)] font-bold">

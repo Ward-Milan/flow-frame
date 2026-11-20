@@ -2,6 +2,10 @@ import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import type { StoryboardCard, StoryboardData, CanvasItem, SubFrame } from '../modules/frame/types';
 import { UndoRedoService } from '../core/UndoRedoService';
+import {
+    exportFlowFramePackageBlob,
+    importAnyFlowFileInFrame
+} from '../core/FlowPackageService';
 
 export type ViewMode = 'gallery' | 'draw' | 'animatic';
 
@@ -224,7 +228,9 @@ interface StoryboardStoreState {
     loadProject: (project: StoryboardProject) => void;
     saveToStorage: () => void;
     exportProjectJson: (projectToExport?: StoryboardProject) => void;
+    exportProjectFlow: (projectToExport?: StoryboardProject) => Promise<void>;
     importProjectJson: (jsonString: string) => boolean;
+    importProjectFile: (file: File) => Promise<{ ok: boolean; count: number; fromLight: boolean }>;
 
     // Undo / Redo (Scoped to active page: gallery, draw, animatic)
     canvasUndoRedoHandler: { undo: () => void; redo: () => void } | null;
@@ -949,6 +955,57 @@ export const useStoryboardStore = create<StoryboardStoreState>((set, get) => {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+        },
+
+        exportProjectFlow: async (projectToExport?: StoryboardProject) => {
+            const current = projectToExport || get().project;
+            const blob = await exportFlowFramePackageBlob(current);
+            const sanitized = (current.title || 'projet').replace(/[^a-zA-Z0-9_-]/g, '_');
+            const filename = `${sanitized}.flow`;
+
+            const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
+            if (isTauri) {
+                const { save } = await import('@tauri-apps/plugin-dialog');
+                const { invoke } = await import('@tauri-apps/api/core');
+                const targetPath = await save({
+                    defaultPath: filename,
+                    filters: [{ name: 'Projet Flow Suite (.flow)', extensions: ['flow'] }]
+                });
+                if (!targetPath) return;
+                const finalPath = targetPath.toLowerCase().endsWith('.flow')
+                    ? targetPath
+                    : `${targetPath}.flow`;
+                const buf = await blob.arrayBuffer();
+                await invoke('write_binary_file', {
+                    path: finalPath,
+                    data: Array.from(new Uint8Array(buf))
+                });
+                return;
+            }
+
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        },
+
+        importProjectFile: async (file: File) => {
+            try {
+                const res = await importAnyFlowFileInFrame(file);
+                get().loadProject(res.project);
+                return {
+                    ok: true,
+                    count: res.project.cards.length,
+                    fromLight: res.createdFromFlowLight
+                };
+            } catch (e) {
+                console.error('Invalid .flow / .json file', e);
+                return { ok: false, count: 0, fromLight: false };
+            }
         },
 
         importProjectJson: (jsonString: string) => {

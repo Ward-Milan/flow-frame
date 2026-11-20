@@ -64,8 +64,9 @@ export const ProjectLauncherModal: React.FC = () => {
     const openSavedProject = useStoryboardStore(s => s.openSavedProject);
     const deleteSavedProject = useStoryboardStore(s => s.deleteSavedProject);
     const duplicateSavedProject = useStoryboardStore(s => s.duplicateSavedProject);
-    const exportProjectJson = useStoryboardStore(s => s.exportProjectJson);
+    const exportProjectFlow = useStoryboardStore(s => s.exportProjectFlow);
     const importProjectJson = useStoryboardStore(s => s.importProjectJson);
+    const importProjectFile = useStoryboardStore(s => s.importProjectFile);
 
     const toast = useToast();
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -121,23 +122,20 @@ export const ProjectLauncherModal: React.FC = () => {
         }
     };
 
-    const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const content = event.target?.result as string;
-            if (content) {
-                const ok = importProjectJson(content);
-                if (ok) {
-                    toast.success('Projet importé avec succès');
-                } else {
-                    toast.error('Fichier de projet invalide');
-                }
-            }
-        };
-        reader.readAsText(file);
+        const res = await importProjectFile(file);
+        if (res.ok) {
+            toast.success(
+                res.fromLight
+                    ? `Plan de feu importé : ${res.count} plan(s) générés automatiquement`
+                    : `Projet importé (${res.count} plan(s))`
+            );
+        } else {
+            toast.error('Fichier .flow / .json invalide');
+        }
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
@@ -165,7 +163,7 @@ export const ProjectLauncherModal: React.FC = () => {
             <input
                 type="file"
                 ref={fileInputRef}
-                accept=".json"
+                accept=".flow,.json"
                 onChange={handleFileImport}
                 className="hidden"
             />
@@ -257,7 +255,7 @@ export const ProjectLauncherModal: React.FC = () => {
                                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#202024] hover:bg-[#27272a] text-xs font-medium text-[#a1a1aa] hover:text-white border border-white/5 transition-colors"
                                     >
                                         <Upload size={13} className="text-[#10B981]" />
-                                        <span>Importer (.json)</span>
+                                        <span>Importer (.flow / .json)</span>
                                     </button>
                                     <button
                                         type="button"
@@ -395,12 +393,12 @@ export const ProjectLauncherModal: React.FC = () => {
                                                         </button>
                                                         <button
                                                             type="button"
-                                                            onClick={() => {
-                                                                exportProjectJson(p);
-                                                                toast.success('Projet exporté');
+                                                            onClick={async () => {
+                                                                await exportProjectFlow(p);
+                                                                toast.success('Projet .flow exporté');
                                                             }}
                                                             className="p-1.5 rounded-lg text-[#a1a1aa] hover:text-white hover:bg-white/10 transition-colors"
-                                                            title="Exporter le fichier (.json)"
+                                                            title="Exporter le projet Flow Suite (.flow)"
                                                         >
                                                             <Download size={12} />
                                                         </button>

@@ -8,10 +8,6 @@ import {
     Undo2, 
     Redo2, 
     FolderOpen, 
-    Save, 
-    FilePlus, 
-    ChevronDown,
-    Home,
     CheckCircle2,
     RefreshCw,
     X
@@ -39,11 +35,9 @@ export const Header: React.FC = () => {
     const setIsLauncherOpen = useStoryboardStore(s => s.setIsLauncherOpen);
     const undo = useStoryboardStore(s => s.undo);
     const redo = useStoryboardStore(s => s.redo);
-    const exportProjectJson = useStoryboardStore(s => s.exportProjectJson);
-    const importProjectJson = useStoryboardStore(s => s.importProjectJson);
+    const importProjectFile = useStoryboardStore(s => s.importProjectFile);
     
     const toast = useToast();
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [tempTitle, setTempTitle] = useState(project.title);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -119,23 +113,20 @@ export const Header: React.FC = () => {
         }
     };
 
-    const handleFileImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const content = event.target?.result as string;
-            if (content) {
-                const ok = importProjectJson(content);
-                if (ok) {
-                    toast.success('Projet chargé avec succès');
-                } else {
-                    toast.error('Fichier de projet invalide');
-                }
-            }
-        };
-        reader.readAsText(file);
+        const res = await importProjectFile(file);
+        if (res.ok) {
+            toast.success(
+                res.fromLight
+                    ? `Plan de feu importé : ${res.count} plan(s) créés automatiquement`
+                    : `Projet chargé (${res.count} plan(s))`
+            );
+        } else {
+            toast.error('Fichier .flow / .json invalide');
+        }
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
@@ -150,12 +141,12 @@ export const Header: React.FC = () => {
 
     return (
         <header className="h-13 bg-[#14161B]/95 backdrop-blur-xl border-b border-[#282B37] px-3 sm:px-4 flex items-center justify-between z-40 shrink-0 select-none text-[#EDEDEC]">
-            {/* Hidden JSON file input for import */}
+            {/* Hidden .flow / .json file input for import */}
             <input 
                 type="file" 
                 ref={fileInputRef} 
                 onChange={handleFileImport} 
-                accept=".json" 
+                accept=".flow,.json" 
                 className="hidden" 
             />
 
@@ -327,7 +318,25 @@ export const Header: React.FC = () => {
                     </button>
                 )}
 
-                {/* Export Button */}
+                {/* Open .flow / .json file directly */}
+                <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="p-2 rounded-xl bg-[#191B22] border border-[#282B37] text-[#9B9A97] hover:text-[#10B981] hover:bg-[#222530] transition-colors"
+                    title="Ouvrir un projet (.flow / .json)"
+                >
+                    <FolderOpen size={14} />
+                </button>
+
+                {/* GitHub Update Check Button */}
+                <button
+                    onClick={() => setIsUpdateModalOpen(true)}
+                    className="p-2 rounded-xl bg-[#191B22] border border-[#282B37] text-[#9B9A97] hover:text-[#10B981] hover:bg-[#222530] transition-colors"
+                    title={`Mises à jour GitHub (v${APP_VERSION})`}
+                >
+                    <RefreshCw size={14} />
+                </button>
+
+                {/* Export Button (All exports: .flow, PDF, XML, MP4) */}
                 <button
                     onClick={() => setIsExportModalOpen(true)}
                     className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#10B981] hover:bg-[#059669] active:scale-95 text-white font-bold text-xs rounded-xl shadow-lg shadow-[#10B981]/20 transition-all"
@@ -335,91 +344,6 @@ export const Header: React.FC = () => {
                     <Download size={13} />
                     <span className="hidden sm:inline">Exporter</span>
                 </button>
-
-                {/* Project Menu Dropdown */}
-                <div className="relative">
-                    <button
-                        onClick={() => setIsMenuOpen(!isMenuOpen)}
-                        className="flex items-center gap-0.5 p-2 rounded-xl bg-[#191B22] border border-[#282B37] text-[#9B9A97] hover:text-[#EDEDEC] hover:bg-[#222530] transition-colors"
-                        title="Menu Projet"
-                    >
-                        <Save size={14} />
-                        <ChevronDown size={11} />
-                    </button>
-
-                    {isMenuOpen && (
-                        <>
-                            <div 
-                                className="fixed inset-0 z-40" 
-                                onClick={() => setIsMenuOpen(false)} 
-                            />
-                            <div className="absolute right-0 mt-2 w-56 bg-[#14161B] border border-[#282B37] rounded-2xl shadow-2xl p-1.5 z-50 flex flex-col text-xs text-[#EDEDEC]">
-                                <button
-                                    onClick={() => {
-                                        setIsMenuOpen(false);
-                                        setIsLauncherOpen(true);
-                                    }}
-                                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-[#191B22] text-left font-semibold transition-colors"
-                                >
-                                    <Home size={14} className="text-[#10B981]" />
-                                    <span>Accueil & Projets</span>
-                                </button>
-
-                                <button
-                                    onClick={() => {
-                                        setIsMenuOpen(false);
-                                        setIsLauncherOpen(true);
-                                    }}
-                                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-[#191B22] text-left text-[#9B9A97] hover:text-[#EDEDEC] transition-colors"
-                                >
-                                    <FilePlus size={14} className="text-[#10B981]" />
-                                    <span>Nouveau projet...</span>
-                                </button>
-
-                                <div className="h-px bg-[#282B37] my-1 mx-2" />
-
-                                <button
-                                    onClick={() => {
-                                        setIsMenuOpen(false);
-                                        fileInputRef.current?.click();
-                                    }}
-                                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-[#191B22] text-left text-[#9B9A97] hover:text-[#EDEDEC] transition-colors"
-                                >
-                                    <FolderOpen size={14} className="text-[#10B981]" />
-                                    <span>Ouvrir un fichier (.json)</span>
-                                </button>
-
-                                <button
-                                    onClick={() => {
-                                        setIsMenuOpen(false);
-                                        exportProjectJson();
-                                        toast.success('Projet sauvegardé');
-                                    }}
-                                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-[#191B22] text-left text-[#9B9A97] hover:text-[#EDEDEC] transition-colors"
-                                >
-                                    <Save size={14} className="text-[#10B981]" />
-                                    <span>Exporter la sauvegarde (.json)</span>
-                                </button>
-
-                                <div className="h-px bg-[#282B37] my-1 mx-2" />
-
-                                <button
-                                    onClick={() => {
-                                        setIsMenuOpen(false);
-                                        setIsUpdateModalOpen(true);
-                                    }}
-                                    className="flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl hover:bg-[#191B22] text-left text-[#9B9A97] hover:text-[#EDEDEC] transition-colors"
-                                >
-                                    <span className="flex items-center gap-2.5">
-                                        <RefreshCw size={14} className="text-[#F59E0B]" />
-                                        <span>Mises à jour GitHub</span>
-                                    </span>
-                                    <span className="text-[10px] font-mono text-[#6E6E6A]">v{APP_VERSION}</span>
-                                </button>
-                            </div>
-                        </>
-                    )}
-                </div>
             </div>
 
             {/* ── GITHUB AUTO-UPDATE MODAL (Mac DMG & Android APK) ── */}
