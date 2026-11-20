@@ -13,7 +13,9 @@ import {
     ChevronDown,
     ChevronUp,
     GripVertical, 
-    GripHorizontal 
+    GripHorizontal,
+    FlipHorizontal2,
+    EyeOff
 } from 'lucide-react';
 
 export interface DrawingNavPanelProps {
@@ -32,6 +34,9 @@ export interface DrawingNavPanelProps {
     onResetViewport: () => void;
     onUndo: () => void;
     onRedo: () => void;
+    isFlippedH?: boolean;
+    onToggleFlipH?: () => void;
+    onToggleFocusMode?: () => void;
 }
 
 export const DrawingNavPanel: React.FC<DrawingNavPanelProps> = ({
@@ -49,7 +54,10 @@ export const DrawingNavPanel: React.FC<DrawingNavPanelProps> = ({
     isViewportModified,
     onResetViewport,
     onUndo,
-    onRedo
+    onRedo,
+    isFlippedH = false,
+    onToggleFlipH,
+    onToggleFocusMode
 }) => {
     // ─────────────────────────────────────────────────────────────────────────
     // COLLAPSED VIEW
@@ -275,6 +283,35 @@ export const DrawingNavPanel: React.FC<DrawingNavPanelProps> = ({
                     <span className="scale-90">Cadre</span>
                 </button>
 
+                {/* Miroir Horizontal & Mode Focus */}
+                <div className="flex flex-col items-center bg-[#202024]/80 rounded-xl p-0.5 border border-white/5 w-full">
+                    {onToggleFlipH && (
+                        <button
+                            onClick={onToggleFlipH}
+                            className={`w-full py-1.5 flex items-center justify-center rounded-lg transition-colors ${
+                                isFlippedH
+                                    ? 'bg-[#F59E0B] text-black shadow-md shadow-[#F59E0B]/25'
+                                    : 'text-[#a1a1aa] hover:text-white hover:bg-white/10'
+                            }`}
+                            title="Miroir horizontal du canevas (touche H) — vérifiez vos proportions sans modifier le dessin"
+                        >
+                            <FlipHorizontal2 size={13} />
+                        </button>
+                    )}
+                    {onToggleFlipH && onToggleFocusMode && (
+                        <div className="w-4 h-px bg-white/10 my-0.5" />
+                    )}
+                    {onToggleFocusMode && (
+                        <button
+                            onClick={onToggleFocusMode}
+                            className="w-full py-1.5 flex items-center justify-center rounded-lg text-[#a1a1aa] hover:text-white hover:bg-white/10 transition-colors"
+                            title="Mode Focus / Zen : masquer les panneaux flottants (touche Tab)"
+                        >
+                            <EyeOff size={13} />
+                        </button>
+                    )}
+                </div>
+
                 <div className="w-full h-px bg-white/10 my-0.5" />
 
                 {/* Drag Grip Handle at Bottom */}
@@ -421,6 +458,37 @@ export const DrawingNavPanel: React.FC<DrawingNavPanelProps> = ({
                 <Maximize2 size={11} />
                 <span>Recentrer</span>
             </button>
+
+            {/* Miroir Horizontal & Mode Focus */}
+            {(onToggleFlipH || onToggleFocusMode) && (
+                <>
+                    <div className="h-6 w-px bg-white/10 flex-shrink-0" />
+                    <div className="flex items-center bg-[#202024]/80 rounded-xl p-0.5 border border-white/5 flex-shrink-0">
+                        {onToggleFlipH && (
+                            <button
+                                onClick={onToggleFlipH}
+                                className={`p-1.5 rounded-lg transition-colors ${
+                                    isFlippedH
+                                        ? 'bg-[#F59E0B] text-black shadow-md shadow-[#F59E0B]/25'
+                                        : 'text-[#a1a1aa] hover:text-white hover:bg-white/10'
+                                }`}
+                                title="Miroir horizontal du canevas (touche H)"
+                            >
+                                <FlipHorizontal2 size={13} />
+                            </button>
+                        )}
+                        {onToggleFocusMode && (
+                            <button
+                                onClick={onToggleFocusMode}
+                                className="p-1.5 rounded-lg text-[#a1a1aa] hover:text-white hover:bg-white/10 transition-colors"
+                                title="Mode Focus / Zen : masquer les panneaux flottants (touche Tab)"
+                            >
+                                <EyeOff size={13} />
+                            </button>
+                        )}
+                    </div>
+                </>
+            )}
 
             <div className="h-6 w-px bg-white/10 flex-shrink-0" />
 

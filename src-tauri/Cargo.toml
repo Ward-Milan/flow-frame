@@ -1,6 +1,6 @@
 [package]
 name = "flowframe"
-version = "1.0.0"
+version = "1.0.1"
 description = "Professional Cinema Storyboard & Animatique Studio"
 authors = ["FlowSuite"]
 edition = "2021"

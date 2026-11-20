@@ -1,6 +1,6 @@
 import { openUrl } from '@tauri-apps/plugin-opener';
 
-export const APP_VERSION = '1.0.0';
+export const APP_VERSION = '1.0.1';
 
 /**
  * Configure your GitHub repository here once created (format: "username/flow-frame").

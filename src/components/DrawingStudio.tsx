@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react';
-import { Layers, Camera, CheckCircle2, Clock, Volume2, X, Minus, Plus } from 'lucide-react';
+import { Layers, Camera, CheckCircle2, Clock, Volume2, X, Minus, Plus, Copy, Eye, FlipHorizontal2 } from 'lucide-react';
 import { useStoryboardStore } from '../store/useStoryboardStore';
 import { DrawingCanvas, type DrawingCanvasRef } from '../modules/frame/DrawingCanvas';
 import { useToast } from '../shared';
@@ -32,6 +32,8 @@ export const DrawingStudio: React.FC = () => {
     const setActiveSubFrameIndex = useStoryboardStore(s => s.setActiveSubFrameIndex);
     const nextCard = useStoryboardStore(s => s.nextCard);
     const prevCard = useStoryboardStore(s => s.prevCard);
+    const duplicateCard = useStoryboardStore(s => s.duplicateCard);
+    const setActiveCardId = useStoryboardStore(s => s.setActiveCardId);
 
     // Drawing settings from store
     const brushTool = useStoryboardStore(s => s.brushTool);
@@ -116,6 +118,8 @@ export const DrawingStudio: React.FC = () => {
     const [canvasZoom, setCanvasZoom] = useState<number>(1);
     const [canvasPan, setCanvasPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
     const [canvasRotation, setCanvasRotation] = useState<number>(0);
+    const [isFlippedH, setIsFlippedH] = useState<boolean>(false);
+    const [isFocusMode, setIsFocusMode] = useState<boolean>(false);
     const [isHandMode, setIsHandMode] = useState<boolean>(false);
     const [isSpacePressed, setIsSpacePressed] = useState<boolean>(false);
 
@@ -174,15 +178,17 @@ export const DrawingStudio: React.FC = () => {
         Math.abs(canvasZoom - 1) > 0.01 ||
         Math.abs(canvasPan.x) > 1 ||
         Math.abs(canvasPan.y) > 1 ||
-        Math.abs(canvasRotation) > 0.5;
+        Math.abs(canvasRotation) > 0.5 ||
+        isFlippedH;
 
     const resetViewport = useCallback(() => {
         setCanvasZoom(1);
         setCanvasPan({ x: 0, y: 0 });
         setCanvasRotation(0);
+        setIsFlippedH(false);
     }, []);
 
-    // Spacebar shortcut for temporary Hand pan mode
+    // Spacebar (Hand pan), H (Flip Horizontal), Tab (Focus/Zen Mode) shortcuts
     useEffect(() => {
         const onKeyDown = (e: KeyboardEvent) => {
             const tag = (e.target as HTMLElement)?.tagName;
@@ -190,6 +196,12 @@ export const DrawingStudio: React.FC = () => {
             if (e.code === 'Space' && !e.repeat) {
                 e.preventDefault();
                 setIsSpacePressed(true);
+            } else if ((e.key === 'h' || e.key === 'H') && !e.metaKey && !e.ctrlKey && !e.altKey && !e.repeat) {
+                e.preventDefault();
+                setIsFlippedH(prev => !prev);
+            } else if (e.key === 'Tab' && !e.metaKey && !e.ctrlKey && !e.altKey && !e.repeat) {
+                e.preventDefault();
+                setIsFocusMode(prev => !prev);
             }
         };
         const onKeyUp = (e: KeyboardEvent) => {
@@ -837,11 +849,33 @@ export const DrawingStudio: React.FC = () => {
                         </div>
 
                         <div className="flex items-center gap-2 shrink-0">
+                            {isFlippedH && (
+                                <button
+                                    onClick={() => setIsFlippedH(false)}
+                                    className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#F59E0B]/20 text-[#F59E0B] hover:bg-[#F59E0B]/30 text-[9px] font-bold border border-[#F59E0B]/40 transition-colors"
+                                    title="Miroir horizontal actif — cliquer ou appuyer sur H pour désactiver"
+                                >
+                                    <FlipHorizontal2 size={10} />
+                                    <span>MIROIR H</span>
+                                </button>
+                            )}
                             {stylusOnlyMode && (
                                 <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 text-[9px] font-bold border border-amber-500/30">
                                     STYLET SEUL
                                 </span>
                             )}
+                            <button
+                                onClick={() => {
+                                    const newId = duplicateCard(activeCard.id);
+                                    setActiveCardId(newId);
+                                    toast.success('Plan dupliqué');
+                                }}
+                                className="flex items-center gap-1 px-2 py-0.5 rounded bg-[#191B22] hover:bg-[#10B981] text-[#9B9A97] hover:text-white border border-[#282B37] transition-colors font-sans font-bold text-[10px]"
+                                title="Dupliquer ce plan en 1 clic (dessin + décor + réglages caméra)"
+                            >
+                                <Copy size={11} />
+                                <span className="hidden sm:inline">Dupliquer</span>
+                            </button>
                             <button
                                 onClick={() => setIsDetailsOpen(!isDetailsOpen)}
                                 className="flex items-center gap-1 px-2 py-0.5 rounded bg-[#191B22] hover:bg-[#10B981] text-[#9B9A97] hover:text-white border border-[#282B37] transition-colors font-sans font-bold text-[10px]"
@@ -857,28 +891,34 @@ export const DrawingStudio: React.FC = () => {
 
                     {/* ── SURFACE DE LA FEUILLE DE DESSIN ── */}
                     <div className={`w-full ${aspectClass} bg-white relative overflow-hidden`}>
-                        <DrawingCanvas
-                            ref={canvasRef}
-                            key={`studio-${activeCard.id}-${activeSubFrameKey}`}
-                            layerKey={`studio-${activeCard.id}-${activeSubFrameKey}`}
-                            initialData={currentSubFrameData}
-                            onSave={handleSaveDrawing}
-                            externalTool={brushTool}
-                            onSelectTool={setBrushTool}
-                            externalColor={brushColor}
-                            externalLineWidth={brushSize}
-                            externalOpacity={brushOpacity}
-                            onionSkinData={prevCardThumbnail}
-                            backgroundData={activeLayer === 'pose' ? activeCard.backgroundData : undefined}
-                            compositionGrid={compositionGrid}
-                            gridColor="#10B981"
-                            aspectRatio={aspectRatio}
-                            zoom={canvasZoom}
-                            rotation={canvasRotation}
-                            isPanningMode={isHandMode || isSpacePressed}
-                            isPreviewingBrushSize={isPreviewingBrushSize}
-                            stylusOnlyMode={stylusOnlyMode}
-                        />
+                        <div
+                            className="w-full h-full"
+                            style={{ transform: isFlippedH ? 'scaleX(-1)' : undefined }}
+                        >
+                            <DrawingCanvas
+                                ref={canvasRef}
+                                key={`studio-${activeCard.id}-${activeSubFrameKey}`}
+                                layerKey={`studio-${activeCard.id}-${activeSubFrameKey}`}
+                                initialData={currentSubFrameData}
+                                onSave={handleSaveDrawing}
+                                externalTool={brushTool}
+                                onSelectTool={setBrushTool}
+                                externalColor={brushColor}
+                                externalLineWidth={brushSize}
+                                externalOpacity={brushOpacity}
+                                onionSkinData={prevCardThumbnail}
+                                backgroundData={activeLayer === 'pose' ? activeCard.backgroundData : undefined}
+                                compositionGrid={compositionGrid}
+                                gridColor="#10B981"
+                                aspectRatio={aspectRatio}
+                                zoom={canvasZoom}
+                                rotation={canvasRotation}
+                                isPanningMode={isHandMode || isSpacePressed}
+                                isPreviewingBrushSize={isPreviewingBrushSize}
+                                stylusOnlyMode={stylusOnlyMode}
+                                isFlippedH={isFlippedH}
+                            />
+                        </div>
 
                         {/* Active Layer Indicator Badge when editing Shared Décor */}
                         {activeLayer === 'background' && (
@@ -900,57 +940,69 @@ export const DrawingStudio: React.FC = () => {
             )}
 
             {/* ── DOCKED MODULAR PANELS (Left, Right, Bottom) ── */}
+            {!isFocusMode ? (
+                <>
+                    {/* Left Slot */}
+                    <div className={`absolute left-4 top-1/2 -translate-y-1/2 z-30 transition-all duration-200 ${
+                        isOtherSlot('left')
+                            ? 'opacity-0 pointer-events-none'
+                            : isSourceSlot('left')
+                            ? 'opacity-60 scale-95 ring-2 ring-[#10B981] rounded-2xl pointer-events-auto'
+                            : 'opacity-100 pointer-events-auto'
+                    }`}>
+                        {isTargetSlot('left') && draggingPanel ? (
+                            <DrawingDropGhost slot="left">
+                                {renderGhostPanel(draggingPanel, 'left')}
+                            </DrawingDropGhost>
+                        ) : (
+                            renderPanel('left')
+                        )}
+                    </div>
 
-            {/* Left Slot */}
-            <div className={`absolute left-4 top-1/2 -translate-y-1/2 z-30 transition-all duration-200 ${
-                isOtherSlot('left')
-                    ? 'opacity-0 pointer-events-none'
-                    : isSourceSlot('left')
-                    ? 'opacity-60 scale-95 ring-2 ring-[#10B981] rounded-2xl pointer-events-auto'
-                    : 'opacity-100 pointer-events-auto'
-            }`}>
-                {isTargetSlot('left') && draggingPanel ? (
-                    <DrawingDropGhost slot="left">
-                        {renderGhostPanel(draggingPanel, 'left')}
-                    </DrawingDropGhost>
-                ) : (
-                    renderPanel('left')
-                )}
-            </div>
+                    {/* Right Slot */}
+                    <div className={`absolute right-4 top-1/2 -translate-y-1/2 z-30 transition-all duration-200 ${
+                        isOtherSlot('right')
+                            ? 'opacity-0 pointer-events-none'
+                            : isSourceSlot('right')
+                            ? 'opacity-60 scale-95 ring-2 ring-[#10B981] rounded-2xl pointer-events-auto'
+                            : 'opacity-100 pointer-events-auto'
+                    }`}>
+                        {isTargetSlot('right') && draggingPanel ? (
+                            <DrawingDropGhost slot="right">
+                                {renderGhostPanel(draggingPanel, 'right')}
+                            </DrawingDropGhost>
+                        ) : (
+                            renderPanel('right')
+                        )}
+                    </div>
 
-            {/* Right Slot */}
-            <div className={`absolute right-4 top-1/2 -translate-y-1/2 z-30 transition-all duration-200 ${
-                isOtherSlot('right')
-                    ? 'opacity-0 pointer-events-none'
-                    : isSourceSlot('right')
-                    ? 'opacity-60 scale-95 ring-2 ring-[#10B981] rounded-2xl pointer-events-auto'
-                    : 'opacity-100 pointer-events-auto'
-            }`}>
-                {isTargetSlot('right') && draggingPanel ? (
-                    <DrawingDropGhost slot="right">
-                        {renderGhostPanel(draggingPanel, 'right')}
-                    </DrawingDropGhost>
-                ) : (
-                    renderPanel('right')
-                )}
-            </div>
-
-            {/* Bottom Slot */}
-            <div className={`absolute bottom-3.5 left-1/2 -translate-x-1/2 z-20 transition-all duration-200 ${
-                isOtherSlot('bottom')
-                    ? 'opacity-0 pointer-events-none'
-                    : isSourceSlot('bottom')
-                    ? 'opacity-60 scale-95 ring-2 ring-[#10B981] rounded-2xl pointer-events-auto'
-                    : 'opacity-100 pointer-events-auto'
-            }`}>
-                {isTargetSlot('bottom') && draggingPanel ? (
-                    <DrawingDropGhost slot="bottom">
-                        {renderGhostPanel(draggingPanel, 'bottom')}
-                    </DrawingDropGhost>
-                ) : (
-                    renderPanel('bottom')
-                )}
-            </div>
+                    {/* Bottom Slot */}
+                    <div className={`absolute bottom-3.5 left-1/2 -translate-x-1/2 z-20 transition-all duration-200 ${
+                        isOtherSlot('bottom')
+                            ? 'opacity-0 pointer-events-none'
+                            : isSourceSlot('bottom')
+                            ? 'opacity-60 scale-95 ring-2 ring-[#10B981] rounded-2xl pointer-events-auto'
+                            : 'opacity-100 pointer-events-auto'
+                    }`}>
+                        {isTargetSlot('bottom') && draggingPanel ? (
+                            <DrawingDropGhost slot="bottom">
+                                {renderGhostPanel(draggingPanel, 'bottom')}
+                            </DrawingDropGhost>
+                        ) : (
+                            renderPanel('bottom')
+                        )}
+                    </div>
+                </>
+            ) : (
+                <button
+                    onClick={() => setIsFocusMode(false)}
+                    className="fixed bottom-4 right-4 z-40 flex items-center gap-2 px-3.5 py-2 rounded-full bg-[#18181b]/90 hover:bg-[#10B981] text-[#EDEDEC] hover:text-white border border-white/15 shadow-2xl backdrop-blur-xl text-xs font-bold transition-all active:scale-95"
+                    title="Quitter le Mode Focus et réafficher les panneaux (Tab)"
+                >
+                    <Eye size={14} />
+                    <span>Panneaux</span>
+                </button>
+            )}
 
             {/* ── FICHE CAMÉRA & MISE EN SCÈNE "1-TAP" (Optimisée Tablette Android & Desktop) ── */}
             {isDetailsOpen && (

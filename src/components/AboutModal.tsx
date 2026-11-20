@@ -45,7 +45,7 @@ export function AboutModal({ isOpen, onClose }: AboutModalProps) {
                         Production Toolkit
                     </p>
                     <p className="mt-1 text-sm text-amber-500 font-bold">
-                        Version 1.0.0
+                        Version 1.0.1
                     </p>
                 </div>
 

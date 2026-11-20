@@ -21,4 +21,4 @@ src-tauri/gen/android/app/src/main/jniLibs/
 
 # Release Signing Secrets & Packaged Installers (published in GitHub Releases)
 src-tauri/flowframe-release.keystore
-releases-v1.0.0/
+releases-v*/

@@ -84,6 +84,7 @@ export const DrawingCanvas = forwardRef<
         isPanningMode?: boolean;
         isPreviewingBrushSize?: boolean;
         stylusOnlyMode?: boolean;
+        isFlippedH?: boolean;
     }
 >(
     (
@@ -104,7 +105,8 @@ export const DrawingCanvas = forwardRef<
             rotation = 0,
             isPanningMode = false,
             isPreviewingBrushSize = false,
-            stylusOnlyMode = false
+            stylusOnlyMode = false,
+            isFlippedH = false
         },
         ref
     ) => {
@@ -712,7 +714,8 @@ export const DrawingCanvas = forwardRef<
                 const cssW = (canvas.offsetWidth || rect.width) * zoom;
                 const cssH = (canvas.offsetHeight || rect.height) * zoom;
 
-                const normX = unrotX / Math.max(1, cssW) + 0.5;
+                const rawNormX = unrotX / Math.max(1, cssW) + 0.5;
+                const normX = isFlippedH ? 1 - rawNormX : rawNormX;
                 const normY = unrotY / Math.max(1, cssH) + 0.5;
 
                 return {
@@ -722,7 +725,7 @@ export const DrawingCanvas = forwardRef<
                     time: performance.now()
                 };
             },
-            [rotation, zoom]
+            [rotation, zoom, isFlippedH]
         );
 
         // ── Interactive Dragging of Selected Vector Shape (Move / Endpoints / Corners) ──
